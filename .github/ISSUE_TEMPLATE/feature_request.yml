@@ -1,0 +1,36 @@
+name: 💡 Feature request
+description: Suggest a new feature for tyloo/atc.
+title: "feat: <short description>"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's hard or impossible today? Describe the use case, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should `tyloo/atc` provide to solve the problem?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you've tried or considered, and why they fall short.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Acknowledge non-goals
+      options:
+        - label: I have read AGENTS.md and confirmed this is in scope.
+          required: true

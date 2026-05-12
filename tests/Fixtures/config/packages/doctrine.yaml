@@ -1,0 +1,16 @@
+doctrine:
+    dbal:
+        driver: pdo_sqlite
+        memory: true
+    orm:
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: true
+        controller_resolver:
+            auto_mapping: false
+        mappings:
+            App:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/Entity'
+                prefix: 'Tyloo\Atc\Tests\Fixtures\Entity'
+                alias: App

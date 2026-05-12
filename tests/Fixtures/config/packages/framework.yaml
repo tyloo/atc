@@ -1,0 +1,25 @@
+framework:
+    secret: test-secret
+    test: true
+    http_method_override: false
+    handle_all_throwables: true
+    php_errors:
+        log: true
+    router:
+        utf8: true
+    session:
+        storage_factory_id: session.storage.factory.mock_file
+    messenger:
+        transports:
+            async: 'in-memory://'
+        routing:
+            'Tyloo\Atc\Tests\Fixtures\Message\SendWelcomeEmail': async
+    mailer:
+        dsn: 'null://null'
+    notifier:
+        chatter_transports:
+            default: 'null://null'
+        texter_transports:
+            default: 'null://null'
+    http_client:
+        default_options: []

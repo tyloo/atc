@@ -1,0 +1,52 @@
+#:schema https://mago.carthage.software/1.26.0/schema.json
+# Welcome to Mago!
+# For full documentation, see https://mago.carthage.software/tools/overview
+version = "1"
+php-version = "8.4.0"
+
+[source]
+workspace = "."
+paths = ["src/"]
+includes = ["vendor"]
+excludes = []
+
+[source.glob]
+literal-separator = true
+
+[formatter]
+preset = "default"
+print-width = 180
+
+[linter]
+integrations = ["symfony", "phpunit"]
+
+[linter.rules]
+ambiguous-function-call = { enabled = false }
+literal-named-argument = { enabled = false }
+halstead = { effort-threshold = 7000 }
+# A fluent assertion library legitimately exposes a wide method surface; raise the threshold so the design isn't penalised.
+too-many-methods = { threshold = 30 }
+# Named-argument request signatures (mirroring Symfony HttpClient) deliberately carry many optional params — a builder object would hurt ergonomics.
+excessive-parameter-list = { threshold = 8 }
+# Messenger trait orchestrates transport discovery + multi-mode assertions; the resulting cyclomatic flow is acceptable for the feature density.
+cyclomatic-complexity = { threshold = 25 }
+# Traits coordinating Symfony container lookups + assertion control flow are heuristically "defect-prone" by Kan's metric; the actual code is straightforward.
+kan-defect = { enabled = false }
+
+[analyzer]
+plugins = []
+find-unused-definitions = true
+find-unused-expressions = true
+analyze-dead-code = false
+memoize-properties = true
+check-throws = true
+unchecked-exceptions = ["Error", "LogicException"]
+unchecked-exception-classes = []
+check-missing-override = true
+find-unused-parameters = true
+strict-list-index-checks = true
+strict-array-index-existence = false
+allow-array-truthy-operand = false
+no-boolean-literal-comparison = false
+check-missing-type-hints = false
+register-super-globals = true

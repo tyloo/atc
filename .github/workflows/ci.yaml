@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} / Symfony ${{ matrix.symfony }} / ${{ matrix.dependency-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+        symfony: ['6.4', '7.x', '8.x']
+        dependency-version: [prefer-lowest, prefer-stable]
+        exclude:
+          # Symfony 8 dropped support for PHP < 8.4.
+          - php: '8.3'
+            symfony: '8.x'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Constrain Symfony version
+        env:
+          SYMFONY_LINE: ${{ matrix.symfony }}
+        run: |
+          if [ "$SYMFONY_LINE" = "6.4" ]; then
+            composer require --no-update --dev \
+              "symfony/framework-bundle:^6.4" \
+              "symfony/http-foundation:^6.4" \
+              "symfony/dependency-injection:^6.4" \
+              "symfony/browser-kit:^6.4"
+          elif [ "$SYMFONY_LINE" = "7.x" ]; then
+            composer require --no-update --dev \
+              "symfony/framework-bundle:^7.0" \
+              "symfony/http-foundation:^7.0" \
+              "symfony/dependency-injection:^7.0" \
+              "symfony/browser-kit:^7.0"
+          else
+            composer require --no-update --dev \
+              "symfony/framework-bundle:^8.0" \
+              "symfony/http-foundation:^8.0" \
+              "symfony/dependency-injection:^8.0" \
+              "symfony/browser-kit:^8.0"
+          fi
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v4
+        with:
+          dependency-versions: ${{ matrix.dependency-version }}
+
+      - name: Run tests
+        run: vendor/bin/phpunit --testdox
+
+  mago-format:
+    name: Mago (format)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Mago
+        uses: nhedger/setup-mago@v1
+
+      - name: Mago format
+        run: mago format --check
+  
+  mago-lint:
+    name: Mago (lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Mago
+        uses: nhedger/setup-mago@v1
+
+      - name: Mago lint
+        run: mago lint
+
+  mago-analyze:
+    name: Mago (analyze)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v4
+
+      - name: Setup Mago
+        uses: nhedger/setup-mago@v1
+
+      - name: Mago analyze
+        run: mago analyze
+
+  codecov:
+    name: Codecov
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: pcov
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v4
+
+      - name: Run tests with coverage
+        run: vendor/bin/phpunit --coverage-clover=build/clover.xml --coverage-text
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/clover.xml
+
+
+  commitlint-pr-title:
+    name: Commitlint (PR title)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  commitlint-commits:
+    name: Commitlint (commits)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: wagoid/commitlint-github-action@v6
+
+  markdownlint:
+    name: Markdownlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: |
+            **/*.md
+            !vendor/**
